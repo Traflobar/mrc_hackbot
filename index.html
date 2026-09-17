@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MAROC AI HUB PREMIUM - Ultimate Signal Predictor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles & Animations -->
+    <style>
+        :root {
+            --morocco-red: #c1272d;
+            --morocco-green: #006233;
+            --morocco-gold: #d4af37;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%);
+            background-attachment: fixed;
+            color: #0f172a;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Ambient glowing dots canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Glassmorphism card */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 20px rgba(0, 98, 51, 0.05);
+        }
+
+        .glass-inner {
+            background: rgba(248, 250, 252, 0.8);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Glowing text & borders */
+        .title-glow {
+            text-shadow: 0 0 20px rgba(193, 39, 45, 0.25), 0 0 35px rgba(0, 98, 51, 0.2);
+        }
+
+        .green-glow {
+            box-shadow: 0 0 20px rgba(0, 98, 51, 0.35);
+        }
+
+        .red-glow {
+            box-shadow: 0 0 20px rgba(193, 39, 45, 0.35);
+        }
+
+        /* Button styling */
+        .game-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1.5px solid #e2e8f0;
+            color: #475569;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .game-btn:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .active-game-btn {
+            background: linear-gradient(135deg, #006233 0%, #004d28 100%);
+            color: #ffffff;
+            border-color: #008744;
+            box-shadow: 0 8px 20px -4px rgba(0, 98, 51, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbars */
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.98); }
+        }
+
+        .pulsing-signal {
+            animation: pulseGlow 1.8s ease-in-out infinite;
+        }
+
+        @keyframes radarScan {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .radar-spinner {
+            animation: radarScan 2s linear infinite;
+        }
+
+        /* Toast Popup Animation */
+        #toast-container {
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast-msg {
+            pointer-events: auto;
+            animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* LTR Override for Flag Branding */
+        .flag-text {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
+            direction: ltr;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-3 sm:p-6 min-h-screen relative">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-full max-w-xs px-4"></div>
+
+    <!-- Main Container -->
+    <div class="w-full max-w-md glass-panel rounded-3xl p-5 sm:p-6 relative z-10 overflow-hidden my-auto transition-all duration-300">
+        
+        <!-- Background Moroccan Glow Orbs -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div class="absolute -top-12 -left-12 w-48 h-48 bg-red-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl"></div>
+        </div>
+
+        <!-- Header Bar -->
+        <div class="flex justify-between items-center mb-6 border-b border-slate-200/60 pb-4">
+            <div class="flex flex-col">
+                <div class="flag-text title-glow text-3xl sm:text-4xl font-black tracking-tight font-outfit">
+                    <span style="color: var(--morocco-red);">MA</span><span style="color: var(--morocco-green);">ROC</span>
+                </div>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-slate-400 font-extrabold text-[10px] tracking-[0.25em] font-outfit uppercase">AI HUB VIP</span>
+                    <span class="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md">v3.5</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Sound Toggle Button -->
+                <button id="sound-toggle-btn" class="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 transition-colors" title="Toggle Sound">
+                    <svg id="sound-icon-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"></path></svg>
+                    <svg id="sound-icon-off" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                </button>
+
+                <!-- Language Toggle Button -->
+                <button id="lang-toggle-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 font-bold text-xs transition-colors">
+                    FR
+                </button>
+
+                <!-- Live Online Counter -->
+                <div class="bg-white/90 border border-slate-200 px-3 py-1.5 rounded-2xl flex items-center gap-2 shadow-sm">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <div class="text-xs font-bold text-slate-700 font-outfit">
+                        <span id="online-count">48</span> <span id="lbl-online" class="text-[11px] font-medium text-slate-500">En ligne</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Section -->
+        <div id="auth-section" class="space-y-4 relative z-10 my-2">
+            <div class="text-center space-y-1">
+                <h2 id="lbl-auth-title" class="text-slate-800 font-bold text-base">دخل الآيدي (ID) ديالك باش تبدا</h2>
+                <p id="lbl-auth-subtitle" class="text-xs text-slate-500 font-medium">Entrez votre ID de joueur pour synchroniser l'IA</p>
+            </div>
+
+            <div class="relative">
+                <input id="player-id-input" type="text" pattern="[0-9]*" inputmode="numeric" placeholder="مثال: 4839201948" class="w-full bg-white border border-slate-300 text-slate-800 rounded-2xl px-4 py-3.5 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 text-center font-outfit font-bold tracking-wider text-lg transition-all shadow-sm">
+                <div class="absolute right-3.5 top-3.5 text-slate-400 pointer-events-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"></path></svg>
+                </div>
+            </div>
+
+            <!-- Server Status Card -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-slate-600 font-medium" id="lbl-server-status">Serveur Maroc AI:</span>
+                </div>
+                <span class="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg" id="lbl-status-connected">Opérationnel (99.8%)</span>
+            </div>
+
+            <button id="connect-btn" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg shadow-red-600/25 active:scale-[0.98] flex items-center justify-center gap-2 text-base">
+                <span id="lbl-btn-connect">Connexion VIP / اتصال آمن</span>
+                <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+
+        <!-- Predictor Dashboard Section (Initially Hidden) -->
+        <div id="predictor-controls" class="hidden opacity-0 transition-all duration-500 space-y-4">
+            
+            <!-- User Profile Bar -->
+            <div class="bg-slate-100/80 border border-slate-200 rounded-2xl p-2.5 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold font-outfit text-sm shadow-sm">
+                        ID
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-800 font-outfit" id="user-display-id">#0000000000</div>
+                        <div class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 11.372C2.224 11.026 2.5 10.75 2.85 10.75h14.3c.35 0 .626.276.684.622l.8 4.8A1 1 0 0117.65 17.5H2.35a1 1 0 01-.984-1.128l.8-4.8zM10 2a3 3 0 00-3 3v2h6V5a3 3 0 00-3-3z" clip-rule="evenodd"></path></svg>
+                            <span id="lbl-session-active">Session Active (Encrypted)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-400 font-medium" id="lbl-accuracy-title">Précision IA</div>
+                    <div class="font-black text-slate-800 font-outfit text-sm text-emerald-600">98.4%</div>
+                </div>
+            </div>
+
+            <!-- Game Selection Buttons Grid -->
+            <div class="grid grid-cols-2 gap-2.5">
+                <button id="aviator-btn" class="game-btn active-game-btn flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-sm">
+                    <span class="text-base">✈️</span> Aviator
+                </button>
+                <button id="mines-btn" class="game-btn flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-sm">
+                    <span class="text-base">💣</span> Mines
+                </button>
+                <button id="penalty-btn" class="game-btn flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-sm">
+                    <span class="text-base">⚽️</span> Penalty
+                </button>
+                <button id="apple-btn" class="game-btn flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-sm">
+                    <span class="text-base">🍏</span> Apple
+                </button>
+            </div>
+
+            <!-- Signal Box Screen -->
+            <div id="signal-display" class="relative overflow-hidden bg-slate-900/5 min-h-[210px] rounded-2xl p-5 flex flex-col items-center justify-center text-center border border-slate-200/80 shadow-inner">
+                <!-- Background Grid -->
+                <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 16px 16px;"></div>
+                
+                <!-- Main Signal Content Area -->
+                <div id="signal-content" class="relative z-10 w-full flex flex-col items-center justify-center">
+                    <div id="signal-text" class="text-slate-500 font-semibold text-base py-4 flex flex-col items-center gap-2">
+                        <div class="w-12 h-12 rounded-full bg-slate-200/80 flex items-center justify-center text-slate-400 text-xl animate-pulse">
+                            ⚡️
+                        </div>
+                        <p id="lbl-waiting-signal">تسنا الإشارة... اضغط على زر التحليل<br><span class="text-xs text-slate-400 font-normal">Appuyez sur le bouton ci-dessous pour le signal</span></p>
+                    </div>
+                </div>
+
+                <!-- Active Signal Expiry Timer Bar (Initially Hidden) -->
+                <div id="signal-timer-container" class="hidden absolute bottom-0 left-0 right-0 bg-slate-200/60 h-1.5 overflow-hidden">
+                    <div id="signal-timer-bar" class="bg-emerald-500 h-full w-full transition-all duration-1000 linear"></div>
+                </div>
+            </div>
+
+            <!-- Signal Generation Button -->
+            <div>
+                <button id="generate-signal-btn" class="w-full bg-slate-900 hover:bg-black text-white font-extrabold py-4 px-6 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-slate-900/20 text-sm tracking-wider uppercase flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z" clip-rule="evenodd"></path></svg>
+                    <span id="lbl-btn-generate">إستخراج الإشارة / OBTEINIR SIGNAL</span>
+                </button>
+            </div>
+
+            <!-- Live Player Chat Box -->
+            <div class="pt-2 border-t border-slate-200/80">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5 font-outfit">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="lbl-chat-title">شات اللاعبين (Chat En Direct)</span>
+                    </h3>
+                    <span class="text-[10px] text-white bg-red-600 px-2 py-0.5 rounded-md font-extrabold uppercase font-outfit tracking-wider">LIVE</span>
+                </div>
+                
+                <!-- Chat Window -->
+                <div id="chat-window" class="h-40 bg-white/80 rounded-2xl border border-slate-200 p-3 overflow-y-auto chat-scroll flex flex-col gap-2.5 relative shadow-inner">
+                    <div class="text-center text-[10px] text-slate-400 font-semibold my-1" id="lbl-chat-start">-- بداية الدردشة المباشرة --</div>
+                </div>
+
+                <!-- Chat Input Form -->
+                <div class="mt-2 flex gap-2">
+                    <input id="chat-input" type="text" placeholder="اكتب رسالة... / Message..." class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-right text-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm">
+                    <button id="send-chat-btn" class="bg-slate-900 hover:bg-black text-white px-3.5 py-2 rounded-xl transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4 rtl:rotate-180" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- External Support & Registration Links -->
+        <div class="mt-6 grid grid-cols-2 gap-2.5">
+            <a href="https://t.me/karimmansourprofitbot" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-600 font-bold py-3 px-2 rounded-2xl transition-all duration-300 text-center flex flex-col items-center justify-center gap-1 border border-slate-200 shadow-sm group">
+                <svg class="w-5 h-5 text-sky-500 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.119.098.152.228.166.321.016.111.023.233.003.364z"/></svg>
+                <span class="text-xs font-outfit" id="lbl-telegram-btn">Contact Telegram</span>
+            </a>
+            
+            <a href="https://reffpa.com/L?tag=d_5329920m_21123c_&site=5329920&ad=21123&r=registration" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 font-bold py-3 px-2 rounded-2xl transition-all duration-300 text-center flex flex-col items-center justify-center gap-1 border border-slate-200 shadow-sm group">
+                <svg class="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="text-xs font-outfit" id="lbl-register-btn">Inscription / Recharger</span>
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center">
+            <p class="text-[10px] text-slate-400 font-outfit font-semibold tracking-wider">
+                &copy; 2026 MAROC AI HUB SYSTEM • ALL RIGHTS RESERVED
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Synth Generator ---
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playScan() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playSuccess() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.25);
+                });
+            }
+        }
+
+        const sound = new SoundFX();
+
+        // --- App State ---
+        const state = {
+            lang: 'ar',
+            selectedGame: 'aviator',
+            isGenerating: false,
+            onlineCount: 48,
+            soundEnabled: true,
+            playerId: '',
+            timerInterval: null
+        };
+
+        // --- Translations Dictionary ---
+        const i18n = {
+            ar: {
+                online: "En ligne",
+                authTitle: "دخل الآيدي (ID) ديالك باش تبدا",
+                authSubtitle: "Entrez votre ID de joueur pour synchroniser l'IA",
+                placeholderId: "مثال: 4839201948",
+                serverStatus: "سيرفر المغرب:",
+                statusConn: "متصل (99.8%)",
+                btnConnect: "اتصال آمن / Connexion VIP",
+                sessionActive: "جلسة مأمنة (تشفير)",
+                accuracyTitle: "دقة الذكاء الاصطناعي",
+                waitingSignal: "تسنا الإشارة... اضغط على زر التحليل<br><span class='text-xs text-slate-400 font-normal'>Appuyez sur le bouton ci-dessous pour le signal</span>",
+                btnGenerate: "🚀 إستخراج الإشارة / OBTEINIR SIGNAL",
+                chatTitle: "شات اللاعبين المباشر",
+                chatStart: "-- بداية الدردشة المباشرة --",
+                telegramBtn: "تواصل مع البوت",
+                registerBtn: "تسجيل / شحن الحساب",
+                analyzing: "جاري تحليل الهاش والداتا...",
+                signalReady: "الإشارة جاهزة!",
+                errInvalidId: "المرجو إدخال آيدي صحيح (بين 8 و 13 رقم)",
+                targetCoef: "الهدف المتوقع",
+                safePath: "المسار الآمن",
+                toastConnected: "تم الاتصال بالحساب بنجاح!"
+            },
+            fr: {
+                online: "En ligne",
+                authTitle: "Entrez votre ID de joueur",
+                authSubtitle: "Connectez votre compte pour des prédictions précises",
+                placeholderId: "Ex: 4839201948",
+                serverStatus: "Serveur Maroc AI:",
+                statusConn: "Opérationnel (99.8%)",
+                btnConnect: "Connexion VIP Sécurisée",
+                sessionActive: "Session Chiffrée (AES-256)",
+                accuracyTitle: "Précision IA",
+                waitingSignal: "En attente du signal... Cliquez ci-dessous<br><span class='text-xs text-slate-400 font-normal'>Cliquez sur Obtenir le signal</span>",
+                btnGenerate: "🚀 OBTEINIR LE SIGNAL",
+                chatTitle: "Chat des joueurs en direct",
+                chatStart: "-- Début du chat en direct --",
+                telegramBtn: "Contact Telegram",
+                registerBtn: "Inscription / Recharger",
+                analyzing: "Analyse du Hash Server en cours...",
+                signalReady: "Signal prêt!",
+                errInvalidId: "Veuillez entrer un ID valide (8 à 13 chiffres)",
+                targetCoef: "Objectif Estimé",
+                safePath: "Chemin Sécurisé",
+                toastConnected: "Compte connecté avec succès!"
+            }
+        };
+
+        const DOM = {
+            authSection: document.getElementById('auth-section'),
+            predictorControls: document.getElementById('predictor-controls'),
+            playerIdInput: document.getElementById('player-id-input'),
+            connectBtn: document.getElementById('connect-btn'),
+            userDisplayId: document.getElementById('user-display-id'),
+            generateSignalBtn: document.getElementById('generate-signal-btn'),
+            signalText: document.getElementById('signal-text'),
+            signalTimerContainer: document.getElementById('signal-timer-container'),
+            signalTimerBar: document.getElementById('signal-timer-bar'),
+            onlineCount: document.getElementById('online-count'),
+            chatWindow: document.getElementById('chat-window'),
+            chatInput: document.getElementById('chat-input'),
+            sendChatBtn: document.getElementById('send-chat-btn'),
+            soundToggleBtn: document.getElementById('sound-toggle-btn'),
+            soundIconOn: document.getElementById('sound-icon-on'),
+            soundIconOff: document.getElementById('sound-icon-off'),
+            langToggleBtn: document.getElementById('lang-toggle-btn'),
+            toastContainer: document.getElementById('toast-container'),
+            gameBtns: document.querySelectorAll('.game-btn')
+        };
+
+        // --- Toast Notification System ---
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'error' ? 'bg-red-600 text-white' : type === 'success' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white';
+            
+            toast.className = `toast-msg ${bgClass} px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center justify-between gap-2 border border-white/20`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="opacity-70 hover:opacity-100 text-sm">✕</button>
+            `;
+
+            DOM.toastContainer.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentElement) toast.remove();
+            }, 3500);
+        }
+
+        // --- Background Ambient Animation (Canvas) ---
+        function initBackgroundCanvas() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const particles = [];
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 3 + 1,
+                    color: Math.random() > 0.5 ? 'rgba(193, 39, 45, 0.25)' : 'rgba(0, 98, 51, 0.25)',
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // --- Online Users Counter Simulation ---
+        function updateOnlineCount() {
+            const diff = Math.floor(Math.random() * 5) - 2;
+            state.onlineCount = Math.max(32, Math.min(85, state.onlineCount + diff));
+            DOM.onlineCount.textContent = state.onlineCount;
+            DOM.onlineCount.parentElement.classList.add('scale-105');
+            setTimeout(() => DOM.onlineCount.parentElement.classList.remove('scale-105'), 200);
+        }
+        setInterval(updateOnlineCount, 3500);
+
+        // --- Simulated Moroccan Live Chat ---
+        const fakeChatters = [
+            { name: "Youssef M. (Casablanca)", msg: "L'application khدامة 100% tba3o ghir l'objectif 🔥" },
+            { name: "Karim S. (Marrakech)", msg: "Yalah rbaht 650 DH f Aviator tbarekallah!" },
+            { name: "Amine B. (Rabat)", msg: "Mines sl3a nadiye, dima 5 n3amat ⭐️" },
+            { name: "Ilyass H. (Tangier)", msg: "Chokran bzaf l karim 3la had l'bot" },
+            { name: "Mehdi K. (Agadir)", msg: "Tawaqo3at dyal Penalty jabo l3az ⚽️" },
+            { name: "Omar T. (Fes)", msg: "S7ebt floussi lyouma hamdoulillah 😄" },
+            { name: "Hicham A. (Oujda)", msg: "Les gars tsnaw dima signal jdid 9bel matl3bo" }
+        ];
+
+        function appendChatMessage(sender, text, isUser = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `animate-slide-up flex flex-col ${isUser ? 'items-start' : 'items-end'}`;
+            
+            const bubbleStyle = isUser 
+                ? 'bg-emerald-100/90 border-emerald-300 text-emerald-950' 
+                : 'bg-white border-slate-200 text-slate-800 shadow-sm';
+
+            const senderColor = isUser ? 'text-emerald-700' : 'text-slate-500';
+
+            msgDiv.innerHTML = `
+                <div class="max-w-[88%] ${bubbleStyle} border rounded-2xl px-3 py-2 text-right">
+                    <span class="text-[10px] ${senderColor} font-bold block mb-0.5">${sender}</span>
+                    <p class="text-xs leading-relaxed font-medium">${text}</p>
+                </div>
+            `;
+
+            DOM.chatWindow.appendChild(msgDiv);
+            DOM.chatWindow.scrollTop = DOM.chatWindow.scrollHeight;
+        }
+
+        // Initial Chat Messages
+        setTimeout(() => appendChatMessage(fakeChatters[0].name, fakeChatters[0].msg), 600);
+        setTimeout(() => appendChatMessage(fakeChatters[1].name, fakeChatters[1].msg), 2200);
+
+        function startBotChatLoop() {
+            const delay = Math.floor(Math.random() * 4000) + 4500;
+            setTimeout(() => {
+                const randomChatter = fakeChatters[Math.floor(Math.random() * fakeChatters.length)];
+                appendChatMessage(randomChatter.name, randomChatter.msg);
+                startBotChatLoop();
+            }, delay);
+        }
+        startBotChatLoop();
+
+        // User Chat Send Handler
+        function handleUserSendChat() {
+            sound.playClick();
+            const text = DOM.chatInput.value.trim();
+            if (!text) return;
+
+            appendChatMessage("أنا (Moi)", text, true);
+            DOM.chatInput.value = '';
+        }
+
+        DOM.sendChatBtn.addEventListener('click', handleUserSendChat);
+        DOM.chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserSendChat();
+        });
+
+        // --- Login & ID Validation ---
+        DOM.connectBtn.addEventListener('click', () => {
+            sound.playClick();
+            const idVal = DOM.playerIdInput.value.trim();
+            const isValid = /^\d{8,13}$/.test(idVal);
+
+            if (!isValid) {
+                showToast(i18n[state.lang].errInvalidId, 'error');
+                DOM.playerIdInput.classList.add('border-red-500', 'bg-red-50');
+                setTimeout(() => DOM.playerIdInput.classList.remove('border-red-500', 'bg-red-50'), 2000);
+                return;
+            }
+
+            state.playerId = idVal;
+            DOM.connectBtn.disabled = true;
+            DOM.connectBtn.innerHTML = `
+                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Connexion...</span>
+            `;
+
+            setTimeout(() => {
+                sound.playSuccess();
+                DOM.userDisplayId.textContent = `#${state.playerId}`;
+                DOM.authSection.style.display = 'none';
+                DOM.predictorControls.classList.remove('hidden');
+                setTimeout(() => DOM.predictorControls.classList.remove('opacity-0'), 50);
+                showToast(i18n[state.lang].toastConnected, 'success');
+            }, 1200);
+        });
+
+        // --- Game Selection ---
+        DOM.gameBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                sound.playClick();
+                DOM.gameBtns.forEach(b => b.classList.remove('active-game-btn'));
+                const target = e.currentTarget;
+                target.classList.add('active-game-btn');
+                state.selectedGame = target.id.replace('-btn', '');
+                
+                // Reset signal screen
+                DOM.signalText.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-slate-200/80 flex items-center justify-center text-slate-400 text-xl animate-pulse">
+                        ⚡️
+                    </div>
+                    <p id="lbl-waiting-signal">${i18n[state.lang].waitingSignal}</p>
+                `;
+                DOM.signalTimerContainer.classList.add('hidden');
+                clearInterval(state.timerInterval);
+            });
+        });
+
+        // --- Timer Countdown For Active Signals ---
+        function startSignalTimer(seconds = 30) {
+            clearInterval(state.timerInterval);
+            DOM.signalTimerContainer.classList.remove('hidden');
+            DOM.signalTimerBar.style.width = '100%';
+
+            const startTime = Date.now();
+            const totalDuration = seconds * 1000;
+
+            state.timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = totalDuration - elapsed;
+                const percentage = Math.max(0, (remaining / totalDuration) * 100);
+
+                DOM.signalTimerBar.style.width = `${percentage}%`;
+
+                if (remaining <= 0) {
+                    clearInterval(state.timerInterval);
+                    DOM.signalTimerContainer.classList.add('hidden');
+                }
+            }, 100);
+        }
+
+        // --- Signal Generator ---
+        DOM.generateSignalBtn.addEventListener('click', () => {
+            if (state.isGenerating) return;
+            state.isGenerating = true;
+            sound.playScan();
+
+            DOM.generateSignalBtn.disabled = true;
+            DOM.generateSignalBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            // Calculation animation step
+            DOM.signalText.innerHTML = `
+                <div class="flex flex-col items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-slate-900 text-amber-400 flex items-center justify-center text-xl radar-spinner shadow-lg">
+                        🎯
+                    </div>
+                    <span class="text-xs font-bold text-slate-600 animate-pulse">${i18n[state.lang].analyzing}</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                sound.playSuccess();
+                let resultHTML = '';
+
+                if (state.selectedGame === 'aviator') {
+                    const rnd = Math.random();
+                    let coeff;
+                    if (rnd < 0.70) coeff = (Math.random() * (2.10 - 1.15) + 1.15).toFixed(2);
+                    else if (rnd < 0.92) coeff = (Math.random() * (4.50 - 2.11) + 2.11).toFixed(2);
+                    else coeff = (Math.random() * (12.00 - 4.51) + 4.51).toFixed(2);
+
+                    resultHTML = `
+                        <div class="flex flex-col items-center animate-slide-up">
+                            <span class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">${i18n[state.lang].targetCoef}</span>
+                            <span class="text-5xl sm:text-6xl font-black font-outfit text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-500" style="filter: drop-shadow(0 4px 10px rgba(193,39,45,0.3))">
+                                x${coeff}
+                            </span>
+                            <div class="mt-2 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
+                                <span>⚡️ CASH OUT AUTONOMOUS</span>
+                            </div>
+                        </div>`;
+                } 
+                else if (state.selectedGame === 'mines') {
+                    const safeCells = new Set();
+                    while (safeCells.size < 5) safeCells.add(Math.floor(Math.random() * 25) + 1);
+
+                    let grid = '<div class="grid grid-cols-5 gap-1.5 sm:gap-2 bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 animate-slide-up">';
+                    for (let i = 1; i <= 25; i++) {
+                        const isSafe = safeCells.has(i);
+                        grid += `
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border text-sm font-bold transition-all ${
+                                isSafe 
+                                ? 'bg-emerald-50 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.35)] text-emerald-600' 
+                                : 'bg-slate-100 border-slate-200 text-slate-300'
+                            }">
+                                ${isSafe ? '⭐️' : ''}
+                            </div>`;
+                    }
+                    grid += '</div>';
+                    resultHTML = grid;
+                }
+                else if (state.selectedGame === 'penalty') {
+                    const targetCell = Math.floor(Math.random() * 15) + 1;
+                    let grid = '<div class="grid grid-cols-5 gap-1.5 sm:gap-2 bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 animate-slide-up">';
+                    for (let i = 1; i <= 15; i++) {
+                        const isTarget = i === targetCell;
+                        grid += `
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border text-sm font-bold ${
+                                isTarget 
+                                ? 'bg-sky-50 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.4)] text-sky-600' 
+                                : 'bg-slate-100 border-slate-200'
+                            }">
+                                ${isTarget ? '⚽️' : ''}
+                            </div>`;
+                    }
+                    grid += '</div>';
+                    resultHTML = grid;
+                }
+                else if (state.selectedGame === 'apple') {
+                    const safePath = [];
+                    for (let i = 0; i < 4; i++) safePath.push(Math.floor(Math.random() * 5));
+
+                    let grid = '<div class="grid grid-cols-5 gap-1.5 bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 animate-slide-up">';
+                    for (let r = 3; r >= 0; r--) {
+                        for (let c = 0; c < 5; c++) {
+                            const isSafe = c === safePath[r];
+                            grid += `
+                                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border text-xs ${
+                                    isSafe 
+                                    ? 'border-red-400 bg-red-50 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]' 
+                                    : 'bg-slate-100 border-slate-200 text-slate-300'
+                                }">
+                                    ${isSafe ? '🍎' : '•'}
+                                </div>`;
+                        }
+                    }
+                    grid += '</div>';
+                    resultHTML = `
+                        <div class="flex flex-col items-center">
+                            <span class="text-slate-400 text-[11px] font-bold mb-2 uppercase">${i18n[state.lang].safePath} (4 Etapes)</span>
+                            ${grid}
+                        </div>`;
+                }
+
+                DOM.signalText.innerHTML = resultHTML;
+                state.isGenerating = false;
+                DOM.generateSignalBtn.disabled = false;
+                DOM.generateSignalBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+
+                startSignalTimer(30);
+            }, 1800);
+        });
+
+        // --- Language Toggle Handler ---
+        DOM.langToggleBtn.addEventListener('click', () => {
+            sound.playClick();
+            state.lang = state.lang === 'ar' ? 'fr' : 'ar';
+            DOM.langToggleBtn.textContent = state.lang === 'ar' ? 'FR' : 'العربية';
+            document.documentElement.setAttribute('dir', state.lang === 'ar' ? 'rtl' : 'ltr');
+            
+            // Update Text Nodes
+            const t = i18n[state.lang];
+            document.getElementById('lbl-online').textContent = t.online;
+            document.getElementById('lbl-auth-title').textContent = t.authTitle;
+            document.getElementById('lbl-auth-subtitle').textContent = t.authSubtitle;
+            DOM.playerIdInput.placeholder = t.placeholderId;
+            document.getElementById('lbl-server-status').textContent = t.serverStatus;
+            document.getElementById('lbl-status-connected').textContent = t.statusConn;
+            document.getElementById('lbl-btn-connect').textContent = t.btnConnect;
+            document.getElementById('lbl-session-active').textContent = t.sessionActive;
+            document.getElementById('lbl-accuracy-title').textContent = t.accuracyTitle;
+            
+            const waitingLbl = document.getElementById('lbl-waiting-signal');
+            if (waitingLbl) waitingLbl.innerHTML = t.waitingSignal;
+
+            document.getElementById('lbl-btn-generate').textContent = t.btnGenerate;
+            document.getElementById('lbl-chat-title').textContent = t.chatTitle;
+            document.getElementById('lbl-chat-start').textContent = t.chatStart;
+            document.getElementById('lbl-telegram-btn').textContent = t.telegramBtn;
+            document.getElementById('lbl-register-btn').textContent = t.registerBtn;
+        });
+
+        // --- Sound Toggle Handler ---
+        DOM.soundToggleBtn.addEventListener('click', () => {
+            state.soundEnabled = !state.soundEnabled;
+            sound.enabled = state.soundEnabled;
+
+            if (state.soundEnabled) {
+                DOM.soundIconOn.classList.remove('hidden');
+                DOM.soundIconOff.classList.add('hidden');
+                sound.playClick();
+            } else {
+                DOM.soundIconOn.classList.add('hidden');
+                DOM.soundIconOff.classList.remove('hidden');
+            }
+        });
+
+        window.addEventListener('load', () => {
+            initBackgroundCanvas();
+        });
+    </script>
+</body>
+</html>
